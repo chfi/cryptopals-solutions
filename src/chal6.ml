@@ -1,4 +1,4 @@
-open Core.Std;;
+open Core.Std
 
 (* TODO: escape rather than throw away endlines and stuff *)
 let encrypt_file fp =
