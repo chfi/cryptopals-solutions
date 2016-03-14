@@ -146,3 +146,24 @@ let find_key_size ints maxsize =
   in
   let dists = List.map keysizes ~f:(fun ks -> (ks,(comparebytes ks))) in
   List.sort ~cmp:(fun (_,x) (_,y) -> compare x y) dists
+
+
+let count_single_block_occurences block ar =
+  let blocks = split_every_n ar (Array.length block) in
+  List.count blocks ~f:(fun b -> b = block)
+
+
+(* splits ar int len-size blocks, then counts the number of repeats
+   of each block. *)
+let count_block_repeats ar len =
+  let blocks = split_every_n ar len in
+  let hashtbl = Hashtbl.create ~hashable:Hashtbl.Poly.hashable () in
+  (* add each block to the hashtable *)
+  List.iter blocks ~f:(fun b ->
+      Hashtbl.set hashtbl
+        ~key:b
+        ~data:(List.count blocks ~f:(fun b' -> b = b')));
+  List.fold (Hashtbl.data hashtbl) ~init:0 ~f:(fun acc i -> Int.max acc i)
+  (* List.max_elt (Hashtbl.data hashtbl) ~cmp:(fun a b -> Int.max a b) *)
+  (* Hashtbl.iter_vals hashtbl ~f:(fun v -> v *)
+

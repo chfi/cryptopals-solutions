@@ -10,3 +10,6 @@ val ascii_string_of_int_array : int array -> string
 val hex_string_of_int_array : int array -> string
 
 val base64_string_of_int_array : int array -> string
+
+
+val pad_int_array_pkcs7 : int array -> int -> int array

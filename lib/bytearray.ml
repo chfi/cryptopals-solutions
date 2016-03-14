@@ -145,3 +145,11 @@ let base64_string_of_int_array ar =
       ~f:(fun i -> String.get base64table (b64_ints.(i))) in
   let pad = String.init pad ~f:(fun _ -> '=') in
   str ^ pad
+
+(* padding functions *)
+let pad_int_array_pkcs7 ar blocklen =
+  let padlen = blocklen - ((Array.length ar) mod blocklen) in
+  let padding = Array.init padlen ~f:(fun i -> padlen) in
+  Array.append ar padding
+
+
