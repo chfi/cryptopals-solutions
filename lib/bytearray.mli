@@ -12,4 +12,8 @@ val hex_string_of_int_array : int array -> string
 val base64_string_of_int_array : int array -> string
 
 
-val pad_int_array_pkcs7 : int array -> int -> int array
+val pad_int_array_pkcs7 : int -> int array -> int array
+
+val unpad_int_array_pkcs7 : int -> int array -> int array
+
+val split_every_n : int array -> int -> int array list

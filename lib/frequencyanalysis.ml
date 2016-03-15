@@ -116,14 +116,6 @@ let normalized_hamming_distance ar1 ar2 =
   let dist = hamming_distance ar1 ar2 in
   (float_of_int dist) /. (float_of_int (Array.length ar1))
 
-(* returns a list where each element is an n-long array from 'ar',
-   potentially skipping the last few elements if the array length
-   is not divisible by n. *)
-let split_every_n ar n =
-  let extra_length = (Array.length ar) mod n in
-  let chopped = Array.slice ar 0 ((Array.length ar) - extra_length) in
-  let elem_len = (Array.length chopped) / n in
-  List.init elem_len ~f:(fun i -> Array.slice chopped (i*n) (((i+1)*n)))
 
 let running_hamming_distance ar len =
   (* remove the last few parts of the arrays, so that they can be evenly

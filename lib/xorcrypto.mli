@@ -1,3 +1,5 @@
+val xor : int array -> int array -> int array
+
 val repeating_key_xor : int array -> int array -> int array
 
 val repeating_key_xor_string : string -> string -> string

@@ -147,10 +147,24 @@ let base64_string_of_int_array ar =
   str ^ pad
 
 (* padding functions *)
-let pad_int_array_pkcs7 ar blocklen =
-  let padlen = blocklen - ((Array.length ar) mod blocklen) in
+let pad_int_array_pkcs7 blocklen ar =
+  let padlen = if ((Array.length ar) mod blocklen) = 0
+    then 0
+    else blocklen - ((Array.length ar) mod blocklen) in
   let padding = Array.init padlen ~f:(fun i -> padlen) in
   Array.append ar padding
+
+let unpad_int_array_pkcs7 blocklen ar =
+  if ((Array.length ar) mod blocklen) = 0
+  then ar
+  else
+    let padlen = Array.nget ar (-1) in
+    (* see that the array is properly padded, raise exception if not *)
+    let padding = Array.slice ar (-padlen) 0 in
+    let correct = Array.init padlen ~f:(fun i -> padlen) in
+    if padding <> correct then raise (Invalid_argument "Array not pkcs7 padded");
+    Array.slice ar 0 (-padlen)
+
 
 (* returns a list where each element is an n-long array from 'ar',
    potentially skipping the last few elements if the array length
