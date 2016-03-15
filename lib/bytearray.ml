@@ -136,7 +136,7 @@ let ascii_string_of_int_array ar =
   String.of_char_list char_list
 
 let hex_string_of_int_array ar =
-  let hex_list = List.init (Array.length ar) ~f:(fun i -> hex_of_int i) in
+  let hex_list = List.init (Array.length ar) ~f:(fun i -> hex_of_int ar.(i)) in
   String.concat hex_list
 
 let base64_string_of_int_array ar =
@@ -152,4 +152,11 @@ let pad_int_array_pkcs7 ar blocklen =
   let padding = Array.init padlen ~f:(fun i -> padlen) in
   Array.append ar padding
 
-
+(* returns a list where each element is an n-long array from 'ar',
+   potentially skipping the last few elements if the array length
+   is not divisible by n. *)
+let split_every_n ar n =
+  let extra_length = (Array.length ar) mod n in
+  let chopped = Array.slice ar 0 ((Array.length ar) - extra_length) in
+  let elem_len = (Array.length chopped) / n in
+  List.init elem_len ~f:(fun i -> Array.slice chopped (i*n) (((i+1)*n)))
