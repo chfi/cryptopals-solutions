@@ -73,13 +73,14 @@ let encrypt_cbc plaintext key iv =
   let padder = Bytearray.pad_int_array_pkcs7 16 in
   let padded = padder plaintext in
   let blocks = Bytearray.split_every_n padded 16 in
+  let temp_block = Array.copy iv in
+
   let encrypted_blocks =
-    List.mapi blocks ~f:(fun i cur_block ->
-        let prev_block =
-          if i = 0 then iv else (List.nth_exn blocks (i-1))
-        in
-        encrypt_single_block_cbc
-          prev_block cur_block key
+    List.map blocks ~f:(fun cur_block ->
+        (* keep track of the last encrypted block *)
+        let crypted = encrypt_single_block_cbc temp_block cur_block key in
+        Array.iteri crypted ~f:(fun i b -> Array.set temp_block i b);
+        crypted
       )
   in
   Array.concat encrypted_blocks
