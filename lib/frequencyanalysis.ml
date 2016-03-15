@@ -120,7 +120,7 @@ let normalized_hamming_distance ar1 ar2 =
 let running_hamming_distance ar len =
   (* remove the last few parts of the arrays, so that they can be evenly
      split into 'len' sized blocks *)
-  let blocks = split_every_n ar len in
+  let blocks = Bytearray.split_every_n ar len in
   let indices = List.range 1 (List.length blocks) in
   let sum = List.fold indices ~init:0.0
       ~f:(fun acc i -> acc +. (normalized_hamming_distance
@@ -141,14 +141,14 @@ let find_key_size ints maxsize =
 
 
 let count_single_block_occurences block ar =
-  let blocks = split_every_n ar (Array.length block) in
+  let blocks = Bytearray.split_every_n ar (Array.length block) in
   List.count blocks ~f:(fun b -> b = block)
 
 
 (* splits ar int len-size blocks, then counts the number of repeats
    of each block. *)
 let count_block_repeats ar len =
-  let blocks = split_every_n ar len in
+  let blocks = Bytearray.split_every_n ar len in
   let hashtbl = Hashtbl.create ~hashable:Hashtbl.Poly.hashable () in
   (* add each block to the hashtable *)
   List.iter blocks ~f:(fun b ->
