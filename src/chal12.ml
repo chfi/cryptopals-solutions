@@ -34,7 +34,8 @@ let uses_ecb =
   let blocks = List.map input ~f:(fun b -> encrypter b) in
   List.exists blocks ~f:(fun b -> Oracle.ecb_encrypted b)
 
-(* i need to think about how this works. *)
+
+
 let find_byte_encryption block_size byte =
   let plaintext =
     (* 65 is A *)
@@ -57,12 +58,51 @@ let find_byte_encryption block_size byte =
    and repeat until the entire plaintext is found.
 *)
 
+(* First we need a function to find the first byte of the unknown string. *)
+(* To do this, we generate a plaintext that's (blocksize - 1) long,
+   then, for each i in [0..255], append i, pick out the relevant (!) encrypted
+   block, put it in a hashtable or something. *)
+(* maybe we should give the index of the byte to decrypt as an argument,
+   and calculate the relevant block from that. *)
+let generate_byte_dictionary block_size =
+  let prefix =
+    (* 65 is A *)
+    Array.init (block_size - 1) ~f:(const 65)
+  in
+  let bytes = List.init 255 ~f:(fun i -> i) in
+  (* this list contains each input plaintext.
+     we can then use bytes as the value in, for example, an alist. *)
+  let plaintexts = List.map bytes
+      ~f:(fun b -> Array.append prefix [|b|])
+  in
+
+  let ciphertexts = List.map plaintexts encrypter in
+
+  (* retrieve the first block from the generated ciphertexts *)
+  let blocks = List.map ciphertexts
+      ~f:(fun ar -> Array.slice ar 0 16)
+  in
+
+  let dict = List.zip_exn blocks bytes in
+  dict
+
+let crack_first_byte =
+  let dict = generate_byte_dictionary 16 in
+  let plainblock = Array.init 15 ~f:(const 65) in
+  let ciphertext = encrypter plainblock in
+  let cipherblock = Array.slice ciphertext 0 16 in
+  string_of_int (List.Assoc.find_exn dict cipherblock)
+
+
 let () =
   let blocksize = find_block_size in
   print_endline ("Blocksize: " ^ (string_of_int blocksize));
 
   let ecb_mode = uses_ecb in
-  print_endline ("Uses ECB: " ^ (string_of_bool ecb_mode))
+  print_endline ("Uses ECB: " ^ (string_of_bool ecb_mode));
+
+  let first_byte = crack_first_byte in
+  print_endline ("First byte: " ^ first_byte)
 
 
 
