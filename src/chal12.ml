@@ -8,7 +8,6 @@ let encrypter plaintext =
       "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK"
   in
   Aes.encrypt_ecb (Array.append plaintext unknown) key
-  (* Oracle.encryption_oracle ~key:(Some key) (Array.append plaintext unknown) *)
 
 (** Find the block size by feeding various length inputs and looking at the
     output lengths **)
