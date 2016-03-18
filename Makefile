@@ -8,19 +8,19 @@
 
 OCB_FLAGS = -use-ocamlfind -I src -I lib
 OCB = 		corebuild $(OCB_FLAGS)
-SOURCES = chal4.native chal6.native chal7.native chal8.native chal10.native chal11.native chal12.native chal13.native
-
+SOURCES = chal4 chal6 chal7 chal8 chal10 chal11 chal12 chal13
+NATIVE = $(SOURCES:=.native)
+BYTE = $(SOURCES:=.byte)
 all: 		native # profile debug
 
 clean:
 			$(OCB) -clean
 
 native: 	#sanity
-			$(OCB) $(SOURCES)
-			# $(OCB) .native
+			$(OCB) $(SOURCES:=.native)
 
 byte:		sanity
-			$(OCB) *.byte
+			$(OCB) $(SOURCES:=.byte)
 
 profile: 	sanity
 			$(OCB) -tag profile $(SOURCES).native
