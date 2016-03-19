@@ -9,8 +9,6 @@
 OCB_FLAGS = -use-ocamlfind -I src -I lib
 OCB = 		corebuild $(OCB_FLAGS)
 SOURCES = chal4 chal6 chal7 chal8 chal10 chal11 chal12 chal13
-NATIVE = $(SOURCES:=.native)
-BYTE = $(SOURCES:=.byte)
 all: 		native # profile debug
 
 clean:
