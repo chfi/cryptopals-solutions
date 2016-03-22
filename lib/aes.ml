@@ -29,7 +29,7 @@ let decrypt_single_block_cbc prev_block cur_block key =
 (* ciphertext and key are int arrays,
    TODO: make it possible to change padding mode *)
 let decrypt_ecb ciphertext key =
-  let unpadder = Bytearray.unpad_int_array_pkcs7 16 in
+  let unpadder = Bytearray.unpad_int_array_pkcs7 in
   let blocks = Bytearray.split_every_n ciphertext 16 in
   let decrypted_blocks =
     List.map blocks ~f:(fun block ->
@@ -54,7 +54,7 @@ let encrypt_ecb plaintext key =
   Array.concat encrypted_blocks
 
 let decrypt_cbc ciphertext key iv =
-  let unpadder = Bytearray.unpad_int_array_pkcs7 16 in
+  let unpadder = Bytearray.unpad_int_array_pkcs7 in
   let blocks = Bytearray.split_every_n ciphertext 16 in
   let decrypted_blocks =
     List.mapi blocks ~f:(fun i cur_block ->
