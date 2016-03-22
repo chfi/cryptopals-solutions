@@ -8,7 +8,7 @@
 
 OCB_FLAGS = -use-ocamlfind -I src -I lib
 OCB = 		corebuild $(OCB_FLAGS)
-SOURCES = chal4 chal6 chal7 chal8 chal10 chal11 chal12 chal13
+SOURCES = chal4 chal6 chal7 chal8 chal10 chal11 chal12 chal13 chal14
 all: 		native # profile debug
 
 clean:
@@ -21,10 +21,10 @@ byte:		sanity
 			$(OCB) $(SOURCES:=.byte)
 
 profile: 	sanity
-			$(OCB) -tag profile $(SOURCES).native
+			$(OCB) -tag profile $(SOURCES:=.native)
 
 debug: 		sanity
-			$(OCB) -tag debug $(SOURCES).byte
+			$(OCB) -tag debug $(SOURCES:=.byte)
 
 sanity:
 # check that packages can be found
