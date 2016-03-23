@@ -1,11 +1,5 @@
 open Core.Std
 
-(* is the string random but constant? then this should be pretty easy;
-   could just clean up the code from the last challenge and combine it
-   with that from chal 12.
-
-   i'll assume it's constant; it makes more sense for that to be the case. *)
-
 let target_base64 = "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK"
 
 let prefix =
@@ -18,6 +12,34 @@ let oracle plaintext =
   let target_plaintext = Bytearray.int_array_of_base64_string target_base64 in
   let pt = Array.concat [prefix; plaintext; target_plaintext] in
   Aes.encrypt_ecb pt key
+
+
+let longest_repeat arr block_size =
+  let blocks = Bytearray.split_every_n arr block_size in
+
+  (* counts how many times the head appears successively, i.e.
+     [a;a;b;c] -> (a,2)
+     [b;a;a;d] -> (b,1) *)
+  let rec hd_succ_count' (p,r) l =
+    let continue = (p = List.hd_exn l) in
+    match List.length l with
+    | 1 -> if continue then (p,r+1) else (p,r)
+    | n -> if continue then hd_succ_count' (p,r+1) (List.tl_exn l)
+                       else (p,r)
+  in
+  let hd_succ_count l =
+    hd_succ_count' (List.hd_exn l, 0) l in
+
+  (* (kind of) the tail of each element *)
+  let tails =
+    let len = List.length blocks in
+    List.init (len-1)
+      ~f:(fun i ->
+          let tail = List.slice blocks i (len-i) in
+          tail)
+  in
+  let hd_counts = List.map tails ~f:hd_succ_count in
+  hd_counts
 
 
 let () =
@@ -49,9 +71,13 @@ let () =
      get a (n extra) number of repeated blocks. *)
   let prefix_len = 0 in
 
+  (* the index of the first whole block that's in our control *)
+  let our_block_number =
+
   (* with the prefix length in hand, we also know the suffix length. *)
   let suffix_len = prefix_suffix_len - prefix_len in
 
   (* and we also know where our plaintext is inserted, so we know which
      block to look at - now we can simply solve this as we did challenge 12. *)
+  ()
 
