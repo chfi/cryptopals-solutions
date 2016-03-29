@@ -68,7 +68,39 @@ let () =
 
   (* find the length of the prefix by adding generating a plaintext block,
      appending it to itself, then prefixing one byte at a time until we
-     get a (n extra) number of repeated blocks. *)
+     get a (n extra) number of repeated blocks.
+
+     ... is it this simple? what if there's a repeated block in the prefix
+     or suffix; there likely isn't, but there could be.
+
+     could just make a huge known plaintext - longer than the prefix + suffix.
+     let's not, for now.
+
+     let's have a 3-block long plaintext, and look for successive repeated blocks.
+  *)
+
+  let known_pt_block = Array.init 16 ~f:(const 65) in
+  let known_pt = Array.concat [known_pt_block; known_pt_block; known_pt_block] in
+  let prefixes = List.init 16 ~f:(fun i -> Array.init i ~f:(const 1)) in
+  let pts = List.mapi prefixes ~f:(fun i p -> (i+16,Array.append p known_pt)) in
+  let cts = List.map pts ~f:(fun (l,pt) -> (l, oracle pt)) in
+  let repeats = List.map cts ~f:(fun (l,ct) -> (l,longest_repeat ct 16)) in
+  (* finds (what is probably) the ciphertext version of our known plaintext block;
+     it's extremely unlikely that the prefix would contain 48 consecutive identical
+     bytes *)
+  (* picks out the most-repeated block from each ciphertext *)
+  (* this is wrong; need to keep the length somehow *)
+  let sorted = List.map repeats ~f:(fun (len,list) -> List.hd_exn (List.sort list
+                                       ~cmp:(fun (_,x) (_,y) -> compare x y)))
+  in
+
+  (* the first one with three repeats is what we're looking for *)
+  (* this contains the ciphertext block that was repeated three times *)
+  let (x,_) = List.find_exn sorted ~f:(fun (_,r) -> r = 3) in
+
+  (* then we need to find the length of the plaintext that led to that
+     block existing in the ciphertext *)
+
   let prefix_len = 0 in
 
   (* the index of the first whole block that's in our control *)
