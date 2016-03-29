@@ -35,28 +35,20 @@ let base64_ints_of_byte_ints bs =
   in
 
   (* append zeroes padding if necessary *)
-  let normalized =
+  let (normalized, padlength) =
     match (Array.length bs) mod 3 with
-    | 0 -> bs
-    | 1 -> Array.append bs [|0;0|]
-    | 2 -> Array.append bs [|0|]
-    | _ -> bs
+    | 1 -> (Array.append bs [|0;0|], 1)
+    | 2 -> (Array.append bs [|0|], 1)
+    | 0 | _ -> (bs, 0)
   in
 
-  let padding =
-    match (Array.length bs) mod 3 with
-    | 0 -> 0
-    | 1 -> 2
-    | 2 -> 1
-    | _ -> 0
-  in
   let rec helper ar =
     match Array.length ar with
     | 0 -> []
     | n -> (triple_to_quad_array
              ar.(0) ar.(1) ar.(2) :: helper (Array.slice ar 3 0))
   in
-  (Array.concat (helper normalized), padding)
+  (Array.concat (helper normalized), padlength)
 
 
 let byte_ints_of_base64_ints b64 =
@@ -91,17 +83,16 @@ let int_array_of_hex_string str =
 let int_array_of_base64_string str =
   (* first, convert the base64 string to an array of ints, each
      int representing one base64 "byte" *)
-  (* count equals to find the padding *)
+  (* count equals-signs to find the padding *)
   let padding = String.count (String.slice str 0 0) ~f:(fun c -> c = '=') in
   (* replace the padding with 0s in the int array *)
-  let normalized = String.slice str 0 ((String.length str) - padding) in
+  let normalized = String.slice str 0 (- padding) in
   let pad_array = Array.init ~f:(fun _ -> 0) padding in
   let base64_ints = Array.init
       ~f:(fun i -> String.index_exn base64table (normalized.[i]))
       (String.length normalized)
   in
 
-  (* at this point, the ints are in base64 form. they need to be transformed *)
   let b64 = Array.append base64_ints pad_array in
 
   (* create list of 3-byte arrays, then concat them *)
@@ -118,7 +109,7 @@ let int_array_of_base64_string str =
 
   in
   let result = Array.concat (helper b64) in
-  Array.slice result 0 ((Array.length result) - padding)
+  Array.slice result 0 (- padding)
 
 
 (** functions to convert from int arrays to various types of text strings.
@@ -148,6 +139,7 @@ let pad_int_array_pkcs7 blocklen ar =
   let padding = Array.init ~f:(fun i -> padlen) padlen in
   Array.append ar padding
 
+
 let unpad_int_array_pkcs7 ar =
   let padlen = Array.nget ar (-1) in
   (* see that the array is properly padded, raise exception if not *)
@@ -157,11 +149,12 @@ let unpad_int_array_pkcs7 ar =
                                       "Array not pkcs7 padded");
   Array.slice ar 0 (-padlen)
 
+
 (* returns a list where each element is an n-long array from 'ar',
    potentially skipping the last few elements if the array length
    is not divisible by n. *)
 let split_every_n ar n =
   let extra_length = (Array.length ar) mod n in
-  let chopped = Array.slice ar 0 ((Array.length ar) - extra_length) in
+  let chopped = Array.slice ar 0 (- extra_length) in
   let elem_len = (Array.length chopped) / n in
   List.init ~f:(fun i -> Array.slice chopped (i*n) (((i+1)*n))) elem_len
