@@ -115,12 +115,14 @@ let int_array_of_base64_string str =
 (** functions to convert from int arrays to various types of text strings.
    the int arrays all represent regular bytes **)
 let ascii_string_of_int_array ar =
-  let char_list = List.map (Array.to_list ar) ~f:(fun i -> Char.of_int_exn i) in
-  String.of_char_list char_list
+  List.map ~f:(fun i -> Char.of_int_exn i) (Array.to_list ar)
+  |> String.of_char_list
+
 
 let hex_string_of_int_array ar =
-  let hex_list = List.init (Array.length ar) ~f:(fun i -> hex_of_int ar.(i)) in
-  String.concat hex_list
+  List.init ~f:(fun i -> hex_of_int ar.(i)) (Array.length ar)
+  |> String.concat
+
 
 let base64_string_of_int_array ar =
   let (b64_ints,pad) = base64_ints_of_byte_ints ar in
