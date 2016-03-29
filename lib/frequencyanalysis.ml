@@ -30,11 +30,11 @@ let freqalist =
    ' ', 0.1918182
   ]
 
+
 let getcharfreq c =
-  let norm = Char.lowercase c in
-  match List.Assoc.find freqalist norm with
-  | Some x -> x
-  | None -> 0.0
+  List.Assoc.find freqalist (Char.lowercase c)
+  |> Option.value ~default:0.0
+
 
 let count_non_alphanumerics str =
   let chars =
@@ -43,20 +43,14 @@ let count_non_alphanumerics str =
     List.init 26 ~f:(fun i -> char_of_int (97 + i)) @
     ['.';'\'';',';'\"';' ';]
   in
-  String.count str ~f:(fun c -> not (List.mem chars c))
+  String.count ~f:(fun c -> not (List.mem chars c)) str
+
 
 (* returns the count of the char c in the string str,
    if ?cs:Some true, then case sensitive, otherwise insensitive *)
 let count_letter str c =
   let norm = String.lowercase str in
-  let rec helper s i =
-    let tail = if (String.length s) = 0 then ""
-          else String.sub s 1 (String.length s - 1) in
-    match (String.length s) with
-    | 0 -> 0
-    | n -> (if (String.get s 0) = c then 1 else 0) + helper tail i
-  in
-  helper norm 0
+  String.count ~f:((=) c) norm
 
 (* chi^2 test of expected frequency of letters,
    plus a penalty for non alphanumerics; not used! *)
@@ -133,16 +127,14 @@ let running_hamming_distance ar len =
 let find_key_size ints maxsize =
   if maxsize > (Array.length ints) / 4 then raise (Failure "Too large keysize");
   let keysizes = List.range 2 maxsize in
-  let comparebytes keysize =
-    running_hamming_distance ints keysize
-  in
-  let dists = List.map keysizes ~f:(fun ks -> (ks,(comparebytes ks))) in
-  List.sort ~cmp:(fun (_,x) (_,y) -> compare x y) dists
+  let ham_helper = running_hamming_distance ints in
+  List.map ~f:(fun ks -> (ks,(ham_helper ks))) keysizes
+  |> List.sort ~cmp:(fun (_,x) (_,y) -> compare x y)
 
 
 let count_single_block_occurences block ar =
-  let blocks = Bytearray.split_every_n ar (Array.length block) in
-  List.count blocks ~f:(fun b -> b = block)
+  Bytearray.split_every_n ar (Array.length block)
+  |> List.count ~f:(fun b -> b = block)
 
 
 (* splits ar int len-size blocks, then counts the number of repeats
@@ -152,10 +144,6 @@ let count_block_repeats ar len =
   let hashtbl = Hashtbl.create ~hashable:Hashtbl.Poly.hashable () in
   (* add each block to the hashtable *)
   List.iter blocks ~f:(fun b ->
-      Hashtbl.set hashtbl
-        ~key:b
-        ~data:(List.count blocks ~f:(fun b' -> b = b')));
-  List.fold (Hashtbl.data hashtbl) ~init:0 ~f:(fun acc i -> Int.max acc i)
-  (* List.max_elt (Hashtbl.data hashtbl) ~cmp:(fun a b -> Int.max a b) *)
-  (* Hashtbl.iter_vals hashtbl ~f:(fun v -> v *)
+      Hashtbl.set ~key:b ~data:(List.count ~f:((=) b) blocks) hashtbl );
 
+  List.fold ~init:0 ~f:(fun acc i -> Int.max acc i) (Hashtbl.data hashtbl)
