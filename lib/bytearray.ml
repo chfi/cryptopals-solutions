@@ -6,8 +6,10 @@ let base64table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345678
 (* converts a length 2 string assumed to represent a byte in hexadecimal form *)
 let int_of_hex str = int_of_string ("0x" ^ str)
 
+
 (* inverse of above; shows an int as a string *)
 let hex_of_int i = Printf.sprintf "%02x" i
+
 
 let byte_triple_to_base64_quad (x,y,z) =
   let a = (0b11111100 land x) lsr 2 in
@@ -15,6 +17,7 @@ let byte_triple_to_base64_quad (x,y,z) =
   let c = ((0b00001111 land y) lsl 2) lor ((0b11000000 land z) lsr 6) in
   let d = (0b00111111 land z) in
   (a,b,c,d)
+
 
 let base64_quad_to_byte_triple (a,b,c,d) =
   let x = ((0b00111111 land a) lsl 2) lor ((0b00110000 land b) lsr 4) in
@@ -27,13 +30,8 @@ let base64_quad_to_byte_triple (a,b,c,d) =
 (* returns padding size as second in pair *)
 let base64_ints_of_byte_ints bs =
   let triple_to_quad_array x y z =
-    let temp = Array.create 4 0 in
     let (a,b,c,d) = byte_triple_to_base64_quad (x,y,z) in
-    Array.set temp 0 a;
-    Array.set temp 1 b;
-    Array.set temp 2 c;
-    Array.set temp 3 d;
-    temp
+    [|a;b;c;d|]
   in
 
   (* append zeroes padding if necessary *)
@@ -64,12 +62,8 @@ let base64_ints_of_byte_ints bs =
 let byte_ints_of_base64_ints b64 =
   (* create list of 3-byte arrays, then concat them *)
   let quad_to_triple_array a b c d =
-    let temp = Array.create 3 0 in
     let (x,y,z) = base64_quad_to_byte_triple (a,b,c,d) in
-    Array.set temp 0 x;
-    Array.set temp 1 y;
-    Array.set temp 2 z;
-    temp
+    [|x;y;z|]
   in
 
   let rec helper ar =
@@ -110,12 +104,8 @@ let int_array_of_base64_string str =
 
   (* create list of 3-byte arrays, then concat them *)
   let quad_to_triple_array a b c d =
-    let temp = Array.create 3 0 in
     let (x,y,z) = base64_quad_to_byte_triple (a,b,c,d) in
-    Array.set temp 0 x;
-    Array.set temp 1 y;
-    Array.set temp 2 z;
-    temp
+    [|x;y;z|]
   in
 
   let rec helper ar =
