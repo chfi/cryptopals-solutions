@@ -52,40 +52,6 @@ let count_letter str c =
   let norm = String.lowercase str in
   String.count ~f:((=) c) norm
 
-(* chi^2 test of expected frequency of letters,
-   plus a penalty for non alphanumerics; not used! *)
-let score_string_chi2 str =
-  let norm = String.strip str in
-  let alphabet = "abcdefghijklmnopqrstuvwxyz" in
-  (* first, calculate the count of each letter in the string. *)
-  let count_alist =
-    List.map
-      ~f:(fun c -> (c, float_of_int (count_letter norm c)) )
-      (String.to_list alphabet)
-  in
-  let len = String.length norm in
-
-  (* then, calculate the expected count of each letter in a string of that length. *)
-  let expected_alist =
-    List.map
-      ~f:(fun c -> (c, getcharfreq c *. (float_of_int len)) )
-      (String.to_list alphabet)
-  in
-
-  (* then take the sum of the square of the differences over the expected count,
-     for each letter in the alphabet. *)
-  let helper i =
-    let c = alphabet.[i] in
-    let expected = List.Assoc.find_exn expected_alist c in
-    let count = List.Assoc.find_exn count_alist c in
-    ((count -. expected) ** 2.0) /. expected
-  in
-
-  let sqdifs = Array.init ~f:helper 26 in
-  let nonalphacount = count_non_alphanumerics norm in
-  let calculated = Array.fold ~init:0.0 ~f:(fun x y -> x +. y) sqdifs in
-
-  calculated +. (float_of_int (nonalphacount * 100))
 
 let score_string_char str =
   String.lowercase str
@@ -140,13 +106,9 @@ let count_single_block_occurences block ar =
   |> List.count ~f:(fun b -> b = block)
 
 
-(* splits ar int len-size blocks, then counts the number of repeats
-   of each block. *)
 let count_block_repeats ar len =
   let blocks = Bytearray.split_every_n ar len in
-  let hashtbl = Hashtbl.create ~hashable:Hashtbl.Poly.hashable () in
-  (* add each block to the hashtable *)
-  List.iter blocks ~f:(fun b ->
-      Hashtbl.set ~key:b ~data:(List.count ~f:((=) b) blocks) hashtbl );
-
-  List.fold ~init:0 ~f:(fun acc i -> Int.max acc i) (Hashtbl.data hashtbl)
+  List.fold ~init:[] ~f:(fun acc bl -> (List.count ~f:((=) bl) blocks)
+                                       |> List.Assoc.add acc bl )
+    blocks
+  |> List.fold ~init:0 ~f:(fun acc (_,i) -> Int.max acc i)
