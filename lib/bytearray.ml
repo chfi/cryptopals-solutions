@@ -78,13 +78,15 @@ let byte_ints_of_base64_ints b64 =
 (* functions to convert from text strings to int arrays;
    all these arrays represent regular old bytes. *)
 let int_array_of_ascii_string str =
-  Array.init (String.length str) ~f:(fun i -> Char.to_int (String.get str i))
+  Array.init ~f:(fun i -> Char.to_int (String.get str i)) (String.length str)
+
 
 let int_array_of_hex_string str =
   if (String.length str) mod 2 <> 0
     then raise (Invalid_argument "Hex strings must be of even length");
   let byte i = int_of_hex (String.sub str (2*i) 2) in
-  Array.init ((String.length str) / 2) ~f:(fun i -> byte i)
+  Array.init ~f:(fun i -> byte i) ((String.length str) / 2)
+
 
 let int_array_of_base64_string str =
   (* first, convert the base64 string to an array of ints, each
@@ -93,11 +95,11 @@ let int_array_of_base64_string str =
   let padding = String.count (String.slice str 0 0) ~f:(fun c -> c = '=') in
   (* replace the padding with 0s in the int array *)
   let normalized = String.slice str 0 ((String.length str) - padding) in
-  let pad_array = Array.init padding ~f:(fun _ -> 0) in
+  let pad_array = Array.init ~f:(fun _ -> 0) padding in
   let base64_ints = Array.init
+      ~f:(fun i -> String.index_exn base64table (normalized.[i]))
       (String.length normalized)
-      (* reverse lookup in the base64 table to find the values *)
-      ~f:(fun i -> String.index_exn base64table (String.get normalized i) ) in
+  in
 
   (* at this point, the ints are in base64 form. they need to be transformed *)
   let b64 = Array.append base64_ints pad_array in
@@ -131,9 +133,11 @@ let hex_string_of_int_array ar =
 
 let base64_string_of_int_array ar =
   let (b64_ints,pad) = base64_ints_of_byte_ints ar in
-  let str = String.init ((Array.length b64_ints) - pad)
-      ~f:(fun i -> String.get base64table (b64_ints.(i))) in
-  let pad = String.init pad ~f:(fun _ -> '=') in
+  let str = String.init
+      ~f:(fun i -> String.get base64table (b64_ints.(i)))
+      ((Array.length b64_ints) - pad)
+  in
+  let pad = String.init ~f:(fun _ -> '=') pad in
   str ^ pad
 
 (* padding functions *)
@@ -141,14 +145,14 @@ let pad_int_array_pkcs7 blocklen ar =
   let padlen = if ((Array.length ar) mod blocklen) = 0
     then 0
     else blocklen - ((Array.length ar) mod blocklen) in
-  let padding = Array.init padlen ~f:(fun i -> padlen) in
+  let padding = Array.init ~f:(fun i -> padlen) padlen in
   Array.append ar padding
 
 let unpad_int_array_pkcs7 ar =
   let padlen = Array.nget ar (-1) in
   (* see that the array is properly padded, raise exception if not *)
   let padding = Array.slice ar (-padlen) 0 in
-  let correct = Array.init padlen ~f:(fun i -> padlen) in
+  let correct = Array.init ~f:(fun i -> padlen) padlen in
   if padding <> correct then raise (Invalid_argument
                                       "Array not pkcs7 padded");
   Array.slice ar 0 (-padlen)
@@ -160,4 +164,4 @@ let split_every_n ar n =
   let extra_length = (Array.length ar) mod n in
   let chopped = Array.slice ar 0 ((Array.length ar) - extra_length) in
   let elem_len = (Array.length chopped) / n in
-  List.init elem_len ~f:(fun i -> Array.slice chopped (i*n) (((i+1)*n)))
+  List.init ~f:(fun i -> Array.slice chopped (i*n) (((i+1)*n))) elem_len
