@@ -9,6 +9,8 @@
 OCB_FLAGS = -use-ocamlfind -I src -I lib
 OCB = 		corebuild $(OCB_FLAGS)
 SOURCES = chal4 chal6 chal7 chal8 chal10 chal11 chal12 chal13 chal14
+DATA = data/*.txt
+
 all: 		native # profile debug
 
 clean:
@@ -30,6 +32,9 @@ sanity:
 # check that packages can be found
 			ocamlfind query core
 			ocamlfind query cryptokit
+
+movedata:
+			cp $(DATA) _build/src/
 
 # test: 		native
 # 			echo '[1, 2, "three", {"four": 4}]' | ./main.native
