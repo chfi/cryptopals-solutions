@@ -42,12 +42,12 @@ let base64_ints_of_byte_ints bs =
     | 0 | _ -> (bs, 0)
   in
 
-  let rec helper ar =
-    match Array.length ar with
-    | 0 -> []
-    | n -> (triple_to_quad_array
-             ar.(0) ar.(1) ar.(2) :: helper (Array.slice ar 3 0))
+  let rec helper = function
+    | [||] -> []
+    | _ as ar -> (triple_to_quad_array
+                    ar.(0) ar.(1) ar.(2) :: helper (Array.slice ar 3 0))
   in
+
   (Array.concat (helper normalized), padlength)
 
 
@@ -58,11 +58,11 @@ let byte_ints_of_base64_ints b64 =
     [|x;y;z|]
   in
 
-  let rec helper ar =
-    match Array.length ar with
-    | 0 -> []
-    | n -> (quad_to_triple_array
+  let rec helper = function
+    | [||] -> []
+    | _ as ar -> (quad_to_triple_array
              ar.(0) ar.(1) ar.(2) ar.(3)) :: helper (Array.slice ar 4 0)
+
   in
   Array.concat (helper b64)
 
@@ -84,7 +84,7 @@ let int_array_of_base64_string str =
   (* first, convert the base64 string to an array of ints, each
      int representing one base64 "byte" *)
   (* count equals-signs to find the padding *)
-  let padding = String.count (String.slice str 0 0) ~f:(fun c -> c = '=') in
+  let padding = String.count ~f:(fun c -> c = '=') (String.slice str 0 0) in
   (* replace the padding with 0s in the int array *)
   let normalized = String.slice str 0 (- padding) in
   let pad_array = Array.init ~f:(fun _ -> 0) padding in
